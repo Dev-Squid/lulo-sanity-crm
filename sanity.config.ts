@@ -6,7 +6,7 @@ import {schemaTypes} from './schemaTypes'
 export default defineConfig({
   name: 'default',
   title: 'Lulo Animal Foundation',
-
+  studioHost: 'fundacionlulo',
   projectId: 'tp4j6k1k',
   dataset: 'production',
 
