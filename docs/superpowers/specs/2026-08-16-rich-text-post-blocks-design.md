@@ -48,10 +48,20 @@ writing experience); document-level i18n (full migration plus frontend query rew
 
 **3. Tables — pin `@sanity/table@2.0.1`.** The current release (`3.1.14`) declares
 `peerDependencies: {sanity: "^5 || ^6.0.0-0", react: "^19.2"}`; this Studio is on `sanity ^4.10.2`
-and `react ^19.1`. Version `2.0.1` is the last release declaring `sanity: "^3.0.0 || ^4.0.0"`.
+and `react ^19.1`. Version `2.0.1` declares `{sanity: "^3.0.0 || ^4.0.0 || ^5.0.0", react: "^18 || ^19"}`
+— verified by unpacking the published tarball, not from `npm view` on a neighbouring version.
 It provides a grid UI with add/remove row and column controls. Its cells are plain strings and
 cannot hold a `localeString`, so a table is built once per language array — acceptable, since
 these tables are mostly numbers, species names and dates.
+
+Because `2.0.1` already covers Sanity 5, the pin only becomes a blocker at a Sanity **6**
+upgrade, not a Sanity 5 one.
+
+The plugin registers **two** schema types, `table` and `tableRow`. Stored shape:
+
+```json
+{"_type": "table", "rows": [{"_type": "tableRow", "_key": "...", "cells": ["a", "b"]}]}
+```
 
 Rejected: hand-rolled table object (nested array-of-arrays editing UI is painful past 3×3);
 skipping tables; upgrading the Studio first (turns content modelling into a framework migration).
@@ -173,14 +183,29 @@ Register the four new object types alongside the existing exports.
 
 ## Frontend changes (`lulo-web/client`)
 
-### New dependency
+### Dependency
 
-Add `"@sanity/image-url": "^1.1.0"` to `client/package.json`. It is currently declared in the
-repo-root `package.json` but absent from `client/package.json`, and unused in `src/`.
+`@sanity/image-url` is already declared in the **repo-root** `package.json` and already
+resolves from `client/` by upward module resolution — the same arrangement `@sanity/client`
+and `@portabletext/react` use today. No new dependency is added, and `client/package.json` is
+not touched.
+
+It must, however, be **upgraded from `^1.1.0` to `^2.1.1` in the root `package.json`**.
+Version `1.1.0` declares `main: lib/node/index.js` with no `types` field, and its `.d.ts`
+files sit in `lib/types/`, so TypeScript resolves no declarations — under `tsconfig.app.json`'s
+`strict: true` that is a `TS7016` build failure. Version `2.1.1` declares
+`types: ./lib/index.d.ts`, has no peer dependencies, and requires Node `>=20.19.0` (local Node
+is v21.5.0). The package is currently unused in `src/`, so the upgrade cannot regress anything.
+
+Use the **named** export — `createImageUrlBuilder` — since v2 deprecates the default export.
+`SanityImageSource` is exported from the package root.
 
 This avoids GROQ changes: `usePostsWithSearch.ts:59` projects `body` raw, so nested images
-arrive as unresolved `asset._ref`. The URL builder resolves a ref directly and adds width,
-quality and format parameters — worth having on photo-heavy posts over mobile connections.
+arrive as unresolved `asset._ref`. The URL builder resolves a ref directly and adds width, fit
+and format parameters — worth having on photo-heavy posts over mobile connections.
+
+Note `tsconfig.app.json` also sets `noUnusedLocals: true`, so no unused imports may be left
+behind during the refactor.
 
 ### `RichText.tsx` becomes `richtext/`
 
@@ -305,7 +330,7 @@ Neither repo has a test framework, and this work does not introduce one.
 | Risk | Mitigation |
 |---|---|
 | CSS rescoping changes post detail typography | Explicit devtools check in verification step 5 |
-| `@sanity/table@2.0.1` pin blocks a Sanity 5/6 upgrade | Accepted and reversible; block data is plain JSON, so a future upgrade swaps the plugin without touching content |
+| `@sanity/table@2.0.1` pin blocks a Sanity 6 upgrade | Accepted and reversible; the pin already covers Sanity 5, and block data is plain JSON, so a future upgrade swaps the plugin without touching content |
 | Editor forgets to mirror a block into the second language | Blocks are self-contained and copy-pasteable between the two arrays; no technical guard |
 | Unresolved image refs if a block is rendered outside `PortableText` | All image URL construction goes through `imageUrl.ts` |
 
