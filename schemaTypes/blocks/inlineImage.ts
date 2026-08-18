@@ -16,7 +16,8 @@ export const inlineImage = defineType({
       name: 'alt',
       title: 'Alternative text',
       type: 'localeString',
-      description: 'Describes the image for screen readers and search engines. English is required.',
+      description:
+        'Describes the image for screen readers and search engines. English is required.',
       validation: (rule) =>
         rule.custom((value?: {en?: string}) =>
           value?.en?.trim() ? true : 'English alternative text is required',
