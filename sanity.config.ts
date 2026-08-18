@@ -8,7 +8,9 @@ export default defineConfig({
   title: 'Lulo Animal Foundation',
   studioHost: 'fundacionlulo',
   projectId: 'tp4j6k1k',
-  dataset: 'production',
+  // Override locally with SANITY_STUDIO_DATASET in .env.local (git-ignored) to
+  // point the Studio at a non-production dataset. Defaults to production.
+  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
   plugins: [structureTool(), visionTool()],
 
