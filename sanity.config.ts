@@ -1,6 +1,7 @@
 import {defineConfig} from 'sanity'
 import {structureTool} from 'sanity/structure'
 import {visionTool} from '@sanity/vision'
+import {table} from '@sanity/table'
 import {schemaTypes} from './schemaTypes'
 
 export default defineConfig({
@@ -12,7 +13,7 @@ export default defineConfig({
   // point the Studio at a non-production dataset. Defaults to production.
   dataset: process.env.SANITY_STUDIO_DATASET || 'production',
 
-  plugins: [structureTool(), visionTool()],
+  plugins: [structureTool(), visionTool(), table()],
 
   schema: {
     types: schemaTypes,
