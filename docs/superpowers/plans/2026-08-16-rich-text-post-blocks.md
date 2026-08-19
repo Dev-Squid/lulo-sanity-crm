@@ -30,7 +30,7 @@ Two working directories. Every path in this plan is relative to one of them, and
   - `moduleResolution: "bundler"` — this is why `@sanity/image-url@1.1.0` fails: with no `exports` and no `types` field, TypeScript finds no declarations at all.
   - `jsx: "react-jsx"` — a `React` import is not required for JSX. Import `React` only where `React.FC` is actually used, matching the existing components.
 - Only the **base language (`en`)** is ever validation-required, so posts can be drafted in English and translated later without blocking publication.
-- Existing `localeRichText` content must remain valid. When declaring `styles` on the block type, `normal`, `h1`, `h2` and `h3` must all be listed — declaring `styles` replaces the default set.
+- Existing `localeRichText` content must remain valid. When declaring `styles` on the block type, `normal`, `h1`, `h2`, `h3` **and `h4`** must all be listed — declaring `styles` replaces the default set. `h4` is not optional: a production GROQ query confirmed the published post "Veterinary Brigade in Usaquén: 23 Lives Filled with Love and Care" uses `h4` three times in **both** language arrays. Omitting it would make those headings unrepresentable in the editor.
 - Decorators (marks) stay at the Sanity default (`strong`, `em`, `code`, `underline`, `strike-through`). Do not restrict them; that would make existing marks unremovable in the editor.
 - Studio Prettier config: no semicolons, single quotes, no bracket spacing, print width 100. WEB uses semicolons and double quotes. Match the repo you are editing.
 - Do not commit the unrelated pending changes already in the STUDIO working tree (the Sanity 3→4 bump in `package.json`/`package-lock.json`, and the deleted `CONTRIBUTOR_GUIDE.md` / `TECHNICAL_GUIDE.md`). Always `git add` explicit paths.
@@ -437,6 +437,7 @@ const richTextMembers = () => [
       {title: 'H1', value: 'h1'},
       {title: 'H2', value: 'h2'},
       {title: 'H3', value: 'h3'},
+      {title: 'H4', value: 'h4'},
       {title: 'Quote', value: 'blockquote'},
     ],
   },
@@ -470,7 +471,9 @@ export const localeRichText = defineType({
 
 `richTextMembers` is a **function**, called once per language, so the two language fields never share one array instance. Sharing a schema definition object across fields risks Sanity annotating it twice.
 
-Note the `styles` list deliberately repeats `normal`, `h1`, `h2` and `h3`: declaring `styles` replaces Sanity's defaults, so omitting them would strip formatting already used in existing posts.
+Note the `styles` list deliberately repeats `normal`, `h1`, `h2`, `h3` and `h4`: declaring `styles` replaces Sanity's defaults, so omitting them would strip formatting already used in existing posts. `h4` is included on evidence, not caution — a production query found one published post using it three times per language.
+
+`h5` and `h6` are deliberately omitted: the same query confirmed no content uses them.
 
 - [ ] **Step 4: Typecheck and lint**
 
@@ -617,6 +620,7 @@ export function buildComponents(lang: string): PortableTextComponents {
       h1: ({ children }: { children: ReactNode }) => <h1 className="rt-h1">{children}</h1>,
       h2: ({ children }: { children: ReactNode }) => <h2 className="rt-h2">{children}</h2>,
       h3: ({ children }: { children: ReactNode }) => <h3 className="rt-h3">{children}</h3>,
+      h4: ({ children }: { children: ReactNode }) => <h4 className="rt-h4">{children}</h4>,
       normal: ({ children }: { children: ReactNode }) => <p className="rt-p">{children}</p>,
       blockquote: ({ children }: { children: ReactNode }) => (
         <blockquote className="rt-blockquote">{children}</blockquote>
@@ -740,6 +744,7 @@ Replace the whole file with:
 .rt .rt-h1 { font-size: 2rem; margin: 1.5rem 0 1rem; line-height: 1.2; }
 .rt .rt-h2 { font-size: 1.6rem; margin: 1.4rem 0 .85rem; line-height: 1.3; }
 .rt .rt-h3 { font-size: 1.3rem; margin: 1.2rem 0 .7rem; line-height: 1.3; }
+.rt .rt-h4 { font-size: 1.1rem; margin: 1.1rem 0 .6rem; line-height: 1.35; }
 .rt .rt-p { margin: 0 0 1rem; }
 .rt .rt-ul, .rt .rt-ol { margin: 0 0 1rem 1.25rem; padding: 0; }
 .rt .rt-li { margin: .35rem 0; }
@@ -1406,4 +1411,6 @@ Expected: a clean tree apart from anything that was already dirty before this wo
 
 ## Deferred
 
-Explicitly out of scope, per the spec: video embeds, a gallery carousel (even though `swiper` is already a dependency), `h4`, fenced code blocks, document-level i18n, and the Sanity 5/6 upgrade.
+Explicitly out of scope, per the spec: video embeds, a gallery carousel (even though `swiper` is already a dependency), fenced code blocks, document-level i18n, and the Sanity 5/6 upgrade.
+
+`h4` was originally deferred here but was pulled into scope during execution: a production query found a published post relying on it. `h5` and `h6` remain out of scope — no content uses them.
