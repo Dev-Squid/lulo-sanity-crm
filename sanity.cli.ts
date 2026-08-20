@@ -11,4 +11,7 @@ export default defineCliConfig({
    */
   autoUpdates: true,
   studioHost: 'fundacionlulo',
+  deployment: {
+    appId: 'hbt4l3pch5jt0nbqmmtqnxu9',
+  },
 })
