@@ -962,9 +962,25 @@ Add a `types` key to the returned object, as a sibling of `block`, `marks`, `lis
 ```css
 /* --- Inline image --- */
 .rt .rt-figure { margin: var(--space-8) 0; }
-.rt .rt-figure--inline { max-width: 100%; }
+
+/* inline: narrower than the text column, centred */
+.rt .rt-figure--inline { max-width: 65%; margin-left: auto; margin-right: auto; }
+
+/* wide: the full width of the text column */
 .rt .rt-figure--wide { max-width: 100%; }
-.rt .rt-figure--full { max-width: 100%; }
+
+/* full: bleeds out to the card edge, consuming exactly the container's own
+   padding. .post-detail sets overflow:hidden to clip its hero image to the
+   card's rounded corners, so anything wider than this is CROPPED, not shown.
+   Keep these offsets equal to .post-detail__content's padding. */
+.rt .rt-figure--full {
+  max-width: none;
+  width: auto;
+  margin-left: calc(-1 * var(--space-6));
+  margin-right: calc(-1 * var(--space-6));
+}
+
+.rt .rt-figure--full .rt-figure__img { border-radius: 0; }
 
 .rt .rt-figure__img {
   display: block;
@@ -998,13 +1014,20 @@ Add a `types` key to the returned object, as a sibling of `block`, `marks`, `lis
   border-radius: var(--radius-md);
 }
 
-@media (min-width: 768px) {
-  .rt .rt-figure--wide { max-width: 120%; margin-left: -10%; margin-right: -10%; }
-  .rt .rt-figure--full { max-width: 140%; margin-left: -20%; margin-right: -20%; }
+@media (max-width: 768px) {
+  /* PostDetail.css drops .post-detail__content padding to --space-4 here, so the
+     full-bleed offsets must shrink to match or the image gets cropped. */
+  .rt .rt-figure--inline { max-width: 100%; }
+  .rt .rt-figure--full {
+    margin-left: calc(-1 * var(--space-4));
+    margin-right: calc(-1 * var(--space-4));
+  }
 }
 ```
 
-The `--wide` and `--full` breakouts only apply from 768px up; below that all three sizes are full-bleed within the text column, which is the only sensible mobile behaviour.
+**Why these values and not a percentage breakout.** An earlier version of this plan gave `--wide` and `--full` percentage breakouts (`max-width: 120%` / `140%` with negative percentage margins). That was wrong and was caught in review, then confirmed by measuring the live page: `.post-detail` sets `overflow: hidden` to clip its hero image to the card's rounded corners, and the text column has only 24px of slack to the card edge. A 10% breakout needed 49px per side and a 20% breakout needed 97px, so both were **cropped** by 25px and 73px respectively — the opposite of the intended effect.
+
+The three sizes are therefore distinguished within the clip boundary: `inline` is narrower than the column, `wide` fills it, and `full` bleeds exactly to the card edge by consuming the container's own padding. The offsets are expressed with the same spacing tokens `PostDetail.css` uses, so they stay in step if that padding changes.
 
 - [ ] **Step 5: Typecheck and lint**
 
