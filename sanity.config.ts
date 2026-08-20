@@ -9,9 +9,13 @@ export default defineConfig({
   title: 'Lulo Animal Foundation',
   studioHost: 'fundacionlulo',
   projectId: 'tp4j6k1k',
-  // Override locally with SANITY_STUDIO_DATASET in .env.local (git-ignored) to
-  // point the Studio at a non-production dataset. Defaults to production.
-  dataset: process.env.SANITY_STUDIO_DATASET || 'production',
+  // The dataset can be overridden for local development via SANITY_STUDIO_DATASET
+  // in .env.local (git-ignored). The override is deliberately honoured only in dev:
+  // the Sanity CLI injects SANITY_STUDIO_* at build and deploy time too, so without
+  // this guard a deploy from a checkout carrying .env.local would publish the hosted
+  // Studio pointed at a non-production dataset. Anything but dev gets production.
+  dataset:
+    (process.env.NODE_ENV === 'development' && process.env.SANITY_STUDIO_DATASET) || 'production',
 
   plugins: [structureTool(), visionTool(), table()],
 
